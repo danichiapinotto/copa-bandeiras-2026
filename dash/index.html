@@ -66,6 +66,8 @@
     box-shadow: 0 4px 0 var(--green-dark);
   }
   .toolbar button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--green-dark); }
+  .toolbar button.danger { background: var(--red); box-shadow: 0 4px 0 #a82a26; }
+  .toolbar button.danger:active { box-shadow: 0 1px 0 #a82a26; }
   .toolbar .meta { font-size: 0.8rem; color: var(--dim); width: 100%; text-align: right; }
 
   table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; overflow: hidden; }
@@ -90,6 +92,7 @@
     <div class="toolbar">
       <input type="text" id="filterTurma" placeholder="Filtrar por turma...">
       <button id="refreshBtn">🔄 Atualizar</button>
+      <button id="resetBtn" class="danger">🗑️ Limpar ranking</button>
       <div class="meta" id="metaInfo"></div>
     </div>
 
@@ -180,6 +183,25 @@
 
   qs('#refreshBtn').addEventListener('click', function () {
     loadRanking().catch(function () {});
+  });
+
+  qs('#resetBtn').addEventListener('click', function () {
+    if (!confirm('Apagar TODO o ranking? Essa ação não pode ser desfeita.')) return;
+
+    var key = localStorage.getItem('cdb_reset_key') || '';
+    key = prompt('Chave de limpeza (RESET_KEY):', key) || '';
+    if (!key) return;
+
+    fetch('/api/reset', {
+      method: 'POST',
+      headers: { 'x-reset-key': key }
+    }).then(function (r) {
+      if (!r.ok) throw new Error('unauthorized');
+      localStorage.setItem('cdb_reset_key', key);
+      return loadRanking();
+    }).catch(function () {
+      alert('Chave incorreta ou erro ao limpar o ranking.');
+    });
   });
 
   qs('#filterTurma').addEventListener('input', render);
