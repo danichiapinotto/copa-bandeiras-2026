@@ -1,0 +1,18 @@
+# Segredos e config local — nunca commitar
+wrangler.toml
+.dev.vars
+.env
+.env.*
+
+# Artefatos de build do Cloudflare
+.wrangler/
+.cloudflare/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+node_modules/

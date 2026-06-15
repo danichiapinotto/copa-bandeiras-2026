@@ -1,0 +1,23 @@
+name = "__REPLACE_ME_PROJECT_NAME__"
+compatibility_date = "2025-03-01"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "__REPLACE_ME_DB_NAME__"
+database_id = "__REPLACE_ME_DB_ID__"
+
+# ---------------------------------------------------------------------------
+# Copie este arquivo para `wrangler.toml` (gitignored) e preencha os valores
+# __REPLACE_ME_*__ após rodar `wrangler d1 create <nome>-db`.
+#
+# Cloudflare Pages com integração Git NÃO lê este arquivo no deploy. Ele serve
+# apenas para (a) `wrangler d1 migrations apply` encontrar o banco e (b)
+# `wrangler pages dev` funcionar localmente.
+#
+# O binding D1 de produção é configurado manualmente no painel da Cloudflare:
+# Pages project → Settings → Bindings → D1 database (nome da variável: DB).
+#
+# O dashboard de ranking em /dash é público (sem chave) — qualquer pessoa com
+# o link pode visualizá-lo.
+# ---------------------------------------------------------------------------

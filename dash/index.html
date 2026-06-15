@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ranking · Copa das Bandeiras 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1f9d55;
+    --green-dark: #0f6b35;
+    --gold: #ffd60a;
+    --red: #e53935;
+    --cream: #fdf8ef;
+    --ink: #1b2a23;
+    --dim: #6b8079;
+    --border: #e3ede6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Fredoka', system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      repeating-linear-gradient(90deg, #2bb35e 0px, #2bb35e 60px, #25a653 60px, #25a653 120px);
+    padding: 20px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  .card {
+    background: var(--cream);
+    border-radius: 24px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+    padding: 24px;
+    position: relative;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 8px solid var(--gold);
+    border-radius: 24px;
+    pointer-events: none;
+  }
+  h1 {
+    text-align: center;
+    color: var(--green-dark);
+    margin: 4px 0 6px;
+    font-size: 1.6rem;
+  }
+  .subtitle { text-align: center; color: var(--dim); margin: 0 0 18px; font-size: 0.95rem; }
+
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .toolbar input[type="text"] {
+    flex: 1; min-width: 160px; padding: 10px 12px; font-family: inherit; font-size: 0.95rem;
+    border: 2px solid var(--border); border-radius: 12px;
+  }
+  .toolbar button {
+    padding: 10px 16px; font-family: inherit; font-size: 0.95rem; font-weight: 700;
+    color: #fff; background: var(--green); border: none; border-radius: 12px; cursor: pointer;
+    box-shadow: 0 4px 0 var(--green-dark);
+  }
+  .toolbar button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--green-dark); }
+  .toolbar .meta { font-size: 0.8rem; color: var(--dim); width: 100%; text-align: right; }
+
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; overflow: hidden; }
+  th, td { padding: 10px 12px; text-align: left; font-size: 0.92rem; border-bottom: 1px solid var(--border); }
+  th { background: var(--green-dark); color: #fff; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.04em; }
+  tbody tr:nth-child(1) { background: #fff8df; }
+  tbody tr:nth-child(2) { background: #f3f6f3; }
+  tbody tr:nth-child(3) { background: #fdeee8; }
+  tbody tr:hover { background: #eef6f0; }
+  .pos { font-weight: 700; text-align: center; width: 46px; }
+  .num { text-align: center; font-weight: 600; }
+  .empty { text-align: center; color: var(--dim); padding: 24px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="card" id="app">
+    <h1>🏆 Ranking · Copa das Bandeiras 2026</h1>
+    <p class="subtitle">Acompanhe em tempo real o desempenho da turma no jogo das bandeiras.</p>
+
+    <div class="toolbar">
+      <input type="text" id="filterTurma" placeholder="Filtrar por turma...">
+      <button id="refreshBtn">🔄 Atualizar</button>
+      <div class="meta" id="metaInfo"></div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th class="pos">#</th>
+          <th>Nome</th>
+          <th>Turma</th>
+          <th class="num">⚽ Gols</th>
+          <th class="num">🥅 Trave</th>
+          <th class="num">Tempo</th>
+          <th>Quando</th>
+        </tr>
+      </thead>
+      <tbody id="rankingBody"></tbody>
+    </table>
+    <div class="empty" id="emptyMsg" style="display:none;">Nenhum participante ainda. Aguarde o jogo começar!</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var qs = function (s) { return document.querySelector(s); };
+  var allRows = [];
+
+  function fmtTime(seconds) {
+    seconds = Number(seconds) || 0;
+    var m = Math.floor(seconds / 60);
+    var s = seconds % 60;
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  function fmtWhen(ts) {
+    var d = new Date(Number(ts));
+    return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function medal(i) {
+    if (i === 0) return '🥇';
+    if (i === 1) return '🥈';
+    if (i === 2) return '🥉';
+    return String(i + 1);
+  }
+
+  function render() {
+    var filter = qs('#filterTurma').value.trim().toLowerCase();
+    var rows = allRows.filter(function (r) {
+      return !filter || (r.turma || '').toLowerCase().indexOf(filter) !== -1;
+    });
+
+    var body = qs('#rankingBody');
+    body.innerHTML = '';
+
+    qs('#emptyMsg').style.display = rows.length ? 'none' : 'block';
+
+    rows.forEach(function (r, i) {
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="pos">' + medal(i) + '</td>' +
+        '<td>' + escapeHtml(r.name) + '</td>' +
+        '<td>' + escapeHtml(r.turma || '—') + '</td>' +
+        '<td class="num">' + r.score + ' / ' + r.total_questions + '</td>' +
+        '<td class="num">' + r.errors + '</td>' +
+        '<td class="num">' + fmtTime(r.duration_seconds) + '</td>' +
+        '<td>' + fmtWhen(r.created_at) + '</td>';
+      body.appendChild(tr);
+    });
+
+    qs('#metaInfo').textContent = rows.length + ' participante(s) · atualizado às ' +
+      new Date().toLocaleTimeString('pt-BR');
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function loadRanking() {
+    return fetch('/api/ranking').then(function (r) { return r.json(); }).then(function (data) {
+      allRows = data.results || [];
+      render();
+    });
+  }
+
+  qs('#refreshBtn').addEventListener('click', function () {
+    loadRanking().catch(function () {});
+  });
+
+  qs('#filterTurma').addEventListener('input', render);
+
+  setInterval(function () {
+    loadRanking().catch(function () {});
+  }, 15000);
+
+  loadRanking().catch(function () {});
+})();
+</script>
+</body>
+</html>

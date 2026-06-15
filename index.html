@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Copa das Bandeiras 2026 ⚽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1f9d55;
+    --green-dark: #0f6b35;
+    --gold: #ffd60a;
+    --blue: #1565c0;
+    --red: #e53935;
+    --cream: #fdf8ef;
+    --ink: #1b2a23;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Fredoka', system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      repeating-linear-gradient(
+        90deg,
+        #2bb35e 0px,
+        #2bb35e 60px,
+        #25a653 60px,
+        #25a653 120px
+      );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 560px;
+    background: var(--cream);
+    border-radius: 28px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .app::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 8px solid var(--gold);
+    border-radius: 28px;
+    pointer-events: none;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    margin: 4px 0 4px;
+    color: var(--green-dark);
+  }
+
+  .subtitle {
+    text-align: center;
+    margin: 0 0 20px;
+    font-size: 1rem;
+    color: #4a5d54;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn .3s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---------- Formulário inicial ---------- */
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 1.05rem;
+    font-family: inherit;
+    border: 2px solid #cfe3d6;
+    border-radius: 14px;
+    background: #fff;
+  }
+
+  input[type="text"]:focus {
+    outline: none;
+    border-color: var(--green);
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+    margin-top: 22px;
+    padding: 16px;
+    font-family: inherit;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--green);
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 var(--green-dark);
+    transition: transform .08s ease, box-shadow .08s ease;
+  }
+
+  .btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 var(--green-dark);
+  }
+
+  .btn.secondary {
+    background: var(--blue);
+    box-shadow: 0 6px 0 #0d3f80;
+  }
+  .btn.secondary:active { box-shadow: 0 2px 0 #0d3f80; }
+
+  .error-msg {
+    color: var(--red);
+    font-weight: 600;
+    margin-top: 8px;
+    min-height: 1.2em;
+    text-align: center;
+  }
+
+  .host-flags {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 18px 0;
+  }
+  .host-flags img {
+    width: 56px;
+    border-radius: 6px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+  }
+
+  /* ---------- Tela do jogo ---------- */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .scoreboard {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+  }
+
+  .score-box {
+    flex: 1;
+    background: var(--green-dark);
+    color: #fff;
+    border-radius: 14px;
+    padding: 8px 10px;
+    text-align: center;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25);
+  }
+
+  .score-box.trave { background: var(--red); }
+
+  .score-box .label {
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+
+  .score-box .value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .value.pop { animation: pop 0.4s ease; }
+
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+  }
+
+  .mute-btn {
+    border: none;
+    background: #fff;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+
+  .progress-wrap {
+    margin-bottom: 14px;
+  }
+
+  .progress-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #4a5d54;
+  }
+
+  .progress-bar {
+    height: 10px;
+    border-radius: 6px;
+    background: #e3ede6;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 6px;
+    transition: width .35s ease;
+  }
+
+  .question-text {
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin: 10px 0 14px;
+  }
+
+  .flag-card {
+    background: #fff;
+    border: 4px solid #cfe3d6;
+    border-radius: 18px;
+    padding: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 18px;
+    transition: border-color .25s ease, transform .25s ease;
+  }
+
+  .flag-card img {
+    width: 100%;
+    max-width: 320px;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    display: block;
+  }
+
+  .flag-card.flash-correct {
+    border-color: var(--green);
+    box-shadow: 0 0 0 6px rgba(31,157,85,0.25);
+  }
+
+  .flag-card.flash-wrong {
+    border-color: var(--red);
+    box-shadow: 0 0 0 6px rgba(229,57,53,0.25);
+  }
+
+  .shake { animation: shake 0.5s ease; }
+
+  @keyframes shake {
+    10%, 90% { transform: translateX(-6px); }
+    20%, 80% { transform: translateX(8px); }
+    30%, 50%, 70% { transform: translateX(-10px); }
+    40%, 60% { transform: translateX(10px); }
+  }
+
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 420px) {
+    .options { grid-template-columns: 1fr; }
+  }
+
+  .option-btn {
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 600;
+    padding: 16px 10px;
+    border: 3px solid #cfe3d6;
+    border-radius: 14px;
+    background: #fff;
+    cursor: pointer;
+    transition: transform .1s ease, background .2s ease, border-color .2s ease, color .2s ease;
+  }
+
+  .option-btn:active:not(:disabled) { transform: scale(0.97); }
+
+  .option-btn:disabled { cursor: default; }
+
+  .option-btn.correct {
+    background: var(--green);
+    border-color: var(--green-dark);
+    color: #fff;
+  }
+
+  .option-btn.wrong {
+    background: var(--red);
+    border-color: #b71c1c;
+    color: #fff;
+  }
+
+  .option-btn.dim { opacity: 0.55; }
+
+  /* ---------- Overlay de feedback (GOL / TRAVE) ---------- */
+  .feedback-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 60;
+  }
+
+  .feedback-card {
+    text-align: center;
+    opacity: 0;
+  }
+
+  .feedback-overlay.show-gol .feedback-card,
+  .feedback-overlay.show-trave .feedback-card {
+    animation: feedbackPop 1.3s ease forwards;
+  }
+
+  .feedback-emoji { font-size: 4.5rem; line-height: 1; }
+
+  .feedback-text {
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-shadow: 0 3px 0 rgba(0,0,0,0.15);
+    margin-top: 4px;
+  }
+
+  .feedback-overlay.show-gol .feedback-text { color: var(--green); }
+  .feedback-overlay.show-trave .feedback-text { color: var(--red); }
+
+  @keyframes feedbackPop {
+    0%   { opacity: 0; transform: scale(0.3) rotate(-8deg); }
+    15%  { opacity: 1; transform: scale(1.25) rotate(4deg); }
+    30%  { opacity: 1; transform: scale(1) rotate(0deg); }
+    78%  { opacity: 1; transform: scale(1) rotate(0deg); }
+    100% { opacity: 0; transform: scale(0.9) rotate(0deg); }
+  }
+
+  /* ---------- Confetti ---------- */
+  .confetti-piece {
+    position: fixed;
+    top: -10px;
+    width: 10px;
+    height: 16px;
+    z-index: 55;
+    pointer-events: none;
+    animation: confettiFall 1.5s linear forwards;
+  }
+
+  @keyframes confettiFall {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(540deg); opacity: 0; }
+  }
+
+  /* ---------- Tela final ---------- */
+  .end-emoji {
+    font-size: 4rem;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .end-title {
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin-bottom: 6px;
+  }
+
+  .end-stats {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 18px 0;
+  }
+
+  .end-stat {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px 18px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    min-width: 100px;
+  }
+
+  .end-stat .num { font-size: 1.8rem; font-weight: 700; }
+  .end-stat .desc { font-size: 0.8rem; color: #4a5d54; }
+
+  .send-status {
+    text-align: center;
+    font-size: 0.9rem;
+    margin-top: 10px;
+    min-height: 1.4em;
+    color: #4a5d54;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TELA INICIAL -->
+  <section id="screen-start" class="screen active">
+    <h1>🏆 Copa das Bandeiras 2026</h1>
+    <p class="subtitle">Ligue cada bandeira ao nome do seu país! Acertou = GOL ⚽. Errou = bola na trave 🥅.</p>
+
+    <div class="host-flags">
+      <img src="https://flagcdn.com/w80/mx.png" alt="">
+      <img src="https://flagcdn.com/w80/ca.png" alt="">
+      <img src="https://flagcdn.com/w80/us.png" alt="">
+    </div>
+
+    <label for="inputName">Seu nome</label>
+    <input type="text" id="inputName" maxlength="60" placeholder="Digite seu nome" autocomplete="off">
+
+    <label for="inputTurma">Turma / série (opcional)</label>
+    <input type="text" id="inputTurma" maxlength="40" placeholder="Ex: 3º ano A" autocomplete="off">
+
+    <div class="error-msg" id="startError"></div>
+
+    <button class="btn" id="startBtn">Começar a jogar ⚽</button>
+  </section>
+
+  <!-- TELA DO JOGO -->
+  <section id="screen-game" class="screen">
+    <div class="topbar">
+      <div class="scoreboard">
+        <div class="score-box gol">
+          <div class="label">⚽ Gols</div>
+          <div class="value" id="scoreGols">0</div>
+        </div>
+        <div class="score-box trave">
+          <div class="label">🥅 Trave</div>
+          <div class="value" id="scoreTrave">0</div>
+        </div>
+      </div>
+      <button class="mute-btn" id="muteBtn" title="Som">🔊</button>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-label" id="progressLabel">Bandeira 1 de 10</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
+    </div>
+
+    <p class="question-text">Qual é o nome deste país?</p>
+
+    <div class="flag-card" id="flagCard">
+      <img id="flagImg" src="" alt="Bandeira do país a ser identificado">
+    </div>
+
+    <div class="options" id="optionsGrid"></div>
+  </section>
+
+  <!-- TELA FINAL -->
+  <section id="screen-end" class="screen">
+    <div class="end-emoji" id="endEmoji">🏆</div>
+    <div class="end-title" id="endTitle">Resultado final</div>
+
+    <div class="end-stats">
+      <div class="end-stat">
+        <div class="num" id="endGols">0</div>
+        <div class="desc">⚽ Gols</div>
+      </div>
+      <div class="end-stat">
+        <div class="num" id="endTrave">0</div>
+        <div class="desc">🥅 Na trave</div>
+      </div>
+    </div>
+
+    <div class="send-status" id="sendStatus"></div>
+
+    <button class="btn" id="playAgainBtn">Jogar novamente 🔁</button>
+  </section>
+
+</div>
+
+<!-- Overlay de feedback -->
+<div class="feedback-overlay" id="feedbackOverlay">
+  <div class="feedback-card" id="feedbackCard">
+    <div class="feedback-emoji" id="feedbackEmoji"></div>
+    <div class="feedback-text" id="feedbackText"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // 48 seleções confirmadas para a Copa do Mundo 2026
+  var TEAMS = [
+    { code: 'mx', name: 'México' },
+    { code: 'za', name: 'África do Sul' },
+    { code: 'kr', name: 'Coreia do Sul' },
+    { code: 'cz', name: 'República Tcheca' },
+    { code: 'ca', name: 'Canadá' },
+    { code: 'ba', name: 'Bósnia e Herzegovina' },
+    { code: 'qa', name: 'Catar' },
+    { code: 'ch', name: 'Suíça' },
+    { code: 'br', name: 'Brasil' },
+    { code: 'ma', name: 'Marrocos' },
+    { code: 'ht', name: 'Haiti' },
+    { code: 'gb-sct', name: 'Escócia' },
+    { code: 'us', name: 'Estados Unidos' },
+    { code: 'py', name: 'Paraguai' },
+    { code: 'au', name: 'Austrália' },
+    { code: 'tr', name: 'Turquia' },
+    { code: 'de', name: 'Alemanha' },
+    { code: 'cw', name: 'Curaçao' },
+    { code: 'ci', name: 'Costa do Marfim' },
+    { code: 'ec', name: 'Equador' },
+    { code: 'nl', name: 'Holanda' },
+    { code: 'jp', name: 'Japão' },
+    { code: 'se', name: 'Suécia' },
+    { code: 'tn', name: 'Tunísia' },
+    { code: 'be', name: 'Bélgica' },
+    { code: 'eg', name: 'Egito' },
+    { code: 'ir', name: 'Irã' },
+    { code: 'nz', name: 'Nova Zelândia' },
+    { code: 'es', name: 'Espanha' },
+    { code: 'cv', name: 'Cabo Verde' },
+    { code: 'sa', name: 'Arábia Saudita' },
+    { code: 'uy', name: 'Uruguai' },
+    { code: 'fr', name: 'França' },
+    { code: 'sn', name: 'Senegal' },
+    { code: 'iq', name: 'Iraque' },
+    { code: 'no', name: 'Noruega' },
+    { code: 'ar', name: 'Argentina' },
+    { code: 'dz', name: 'Argélia' },
+    { code: 'at', name: 'Áustria' },
+    { code: 'jo', name: 'Jordânia' },
+    { code: 'pt', name: 'Portugal' },
+    { code: 'cd', name: 'Congo (RD)' },
+    { code: 'uz', name: 'Uzbequistão' },
+    { code: 'co', name: 'Colômbia' },
+    { code: 'gb-eng', name: 'Inglaterra' },
+    { code: 'hr', name: 'Croácia' },
+    { code: 'gh', name: 'Gana' },
+    { code: 'pa', name: 'Panamá' }
+  ];
+
+  var ROUNDS = 10;
+
+  var state = {
+    name: '',
+    turma: '',
+    questions: [],
+    index: 0,
+    score: 0,
+    misses: 0,
+    startTime: 0,
+    answered: false
+  };
+
+  var muted = localStorage.getItem('cdb_muted') === '1';
+
+  // ---------- Utilidades ----------
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(function (el) {
+      el.classList.toggle('active', el.id === 'screen-' + name);
+    });
+  }
+
+  function popValue(el) {
+    el.classList.remove('pop');
+    void el.offsetWidth; // força reflow para reiniciar a animação
+    el.classList.add('pop');
+  }
+
+  // ---------- Som ----------
+  var audioCtx;
+  function getAudioCtx() {
+    if (!audioCtx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+    }
+    return audioCtx;
+  }
+
+  function beep(freq, start, duration, type, gain) {
+    if (muted) return;
+    try {
+      var ctx = getAudioCtx();
+      var osc = ctx.createOscillator();
+      var g = ctx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      osc.connect(g);
+      g.connect(ctx.destination);
+      var t0 = ctx.currentTime + start;
+      g.gain.setValueAtTime(gain || 0.2, t0);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+      osc.start(t0);
+      osc.stop(t0 + duration);
+    } catch (e) { /* áudio indisponível, ignora */ }
+  }
+
+  function playGoalSound() {
+    beep(523.25, 0, 0.12, 'sine', 0.2);
+    beep(659.25, 0.1, 0.12, 'sine', 0.2);
+    beep(783.99, 0.2, 0.25, 'sine', 0.22);
+  }
+
+  function playTraveSound() {
+    beep(180, 0, 0.22, 'square', 0.15);
+    beep(120, 0.1, 0.25, 'square', 0.12);
+  }
+
+  function updateMuteBtn() {
+    document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+  }
+
+  document.getElementById('muteBtn').addEventListener('click', function () {
+    muted = !muted;
+    localStorage.setItem('cdb_muted', muted ? '1' : '0');
+    updateMuteBtn();
+  });
+  updateMuteBtn();
+
+  // ---------- Confetti ----------
+  var CONFETTI_COLORS = ['#ffd60a', '#1f9d55', '#1565c0', '#e53935', '#ffffff', '#ff9f1c'];
+
+  function launchConfetti() {
+    for (var i = 0; i < 28; i++) {
+      var piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = (Math.random() * 100) + 'vw';
+      piece.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      piece.style.animationDuration = (1.1 + Math.random() * 0.8) + 's';
+      piece.style.animationDelay = (Math.random() * 0.2) + 's';
+      document.body.appendChild(piece);
+      (function (el) {
+        setTimeout(function () { el.remove(); }, 2200);
+      })(piece);
+    }
+  }
+
+  // ---------- Feedback overlay ----------
+  function showFeedback(type) {
+    var overlay = document.getElementById('feedbackOverlay');
+    var emoji = document.getElementById('feedbackEmoji');
+    var text = document.getElementById('feedbackText');
+
+    overlay.classList.remove('show-gol', 'show-trave');
+    void overlay.offsetWidth;
+
+    if (type === 'gol') {
+      emoji.textContent = '⚽🎉';
+      text.textContent = 'GOOOL!';
+      overlay.classList.add('show-gol');
+      launchConfetti();
+    } else {
+      emoji.textContent = '🥅';
+      text.textContent = 'NA TRAVE!';
+      overlay.classList.add('show-trave');
+    }
+
+    setTimeout(function () {
+      overlay.classList.remove('show-gol', 'show-trave');
+    }, 1300);
+  }
+
+  // ---------- Tela inicial ----------
+  document.getElementById('inputName').value = localStorage.getItem('cdb_name') || '';
+  document.getElementById('inputTurma').value = localStorage.getItem('cdb_turma') || '';
+
+  document.getElementById('startBtn').addEventListener('click', function () {
+    var name = document.getElementById('inputName').value.trim();
+    var turma = document.getElementById('inputTurma').value.trim();
+    var errorEl = document.getElementById('startError');
+
+    if (!name) {
+      errorEl.textContent = 'Digite seu nome para começar!';
+      return;
+    }
+    errorEl.textContent = '';
+
+    localStorage.setItem('cdb_name', name);
+    localStorage.setItem('cdb_turma', turma);
+
+    state.name = name;
+    state.turma = turma;
+    startGame();
+  });
+
+  // ---------- Jogo ----------
+  function startGame() {
+    state.questions = shuffle(TEAMS).slice(0, ROUNDS);
+    state.index = 0;
+    state.score = 0;
+    state.misses = 0;
+    state.startTime = Date.now();
+
+    document.getElementById('scoreGols').textContent = '0';
+    document.getElementById('scoreTrave').textContent = '0';
+
+    showScreen('game');
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    state.answered = false;
+
+    var correct = state.questions[state.index];
+    var pool = TEAMS.filter(function (t) { return t.code !== correct.code; });
+    var distractors = shuffle(pool).slice(0, 3);
+    var options = shuffle([correct].concat(distractors));
+
+    document.getElementById('flagImg').src = 'https://flagcdn.com/w320/' + correct.code + '.png';
+
+    var flagCard = document.getElementById('flagCard');
+    flagCard.classList.remove('flash-correct', 'flash-wrong', 'shake');
+
+    var grid = document.getElementById('optionsGrid');
+    grid.innerHTML = '';
+
+    options.forEach(function (opt) {
+      var btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = opt.name;
+      btn.addEventListener('click', function () {
+        selectOption(opt, correct, btn, grid);
+      });
+      grid.appendChild(btn);
+    });
+
+    document.getElementById('progressLabel').textContent =
+      'Bandeira ' + (state.index + 1) + ' de ' + state.questions.length;
+    document.getElementById('progressFill').style.width =
+      Math.round(((state.index + 1) / state.questions.length) * 100) + '%';
+  }
+
+  function selectOption(opt, correct, btnEl, grid) {
+    if (state.answered) return;
+    state.answered = true;
+
+    var allButtons = grid.querySelectorAll('.option-btn');
+    var flagCard = document.getElementById('flagCard');
+    var isCorrect = opt.code === correct.code;
+
+    allButtons.forEach(function (b) { b.disabled = true; });
+
+    if (isCorrect) {
+      btnEl.classList.add('correct');
+      flagCard.classList.add('flash-correct');
+      state.score++;
+      var golEl = document.getElementById('scoreGols');
+      golEl.textContent = state.score;
+      popValue(golEl);
+      showFeedback('gol');
+      playGoalSound();
+    } else {
+      btnEl.classList.add('wrong');
+      flagCard.classList.add('flash-wrong');
+      flagCard.classList.add('shake');
+      allButtons.forEach(function (b) {
+        if (b.textContent === correct.name) b.classList.add('correct');
+        if (b !== btnEl && b.textContent !== correct.name) b.classList.add('dim');
+      });
+      state.misses++;
+      var traveEl = document.getElementById('scoreTrave');
+      traveEl.textContent = state.misses;
+      popValue(traveEl);
+      showFeedback('trave');
+      playTraveSound();
+    }
+
+    setTimeout(function () {
+      state.index++;
+      if (state.index >= state.questions.length) {
+        endGame();
+      } else {
+        renderQuestion();
+      }
+    }, 1400);
+  }
+
+  // ---------- Tela final ----------
+  function endGame() {
+    var duration = Math.round((Date.now() - state.startTime) / 1000);
+
+    document.getElementById('endGols').textContent = state.score;
+    document.getElementById('endTrave').textContent = state.misses;
+
+    var ratio = state.score / state.questions.length;
+    var emoji, title;
+    if (ratio === 1) {
+      emoji = '🏆'; title = 'PERFEITO! Você é o craque das bandeiras!';
+    } else if (ratio >= 0.7) {
+      emoji = '🌟'; title = 'Excelente! Você sabe muito sobre a Copa!';
+    } else if (ratio >= 0.4) {
+      emoji = '⚽'; title = 'Muito bem! Continue treinando!';
+    } else {
+      emoji = '💪'; title = 'Bom começo! Que tal jogar de novo?';
+    }
+    document.getElementById('endEmoji').textContent = emoji;
+    document.getElementById('endTitle').textContent = title;
+
+    showScreen('end');
+    sendResult(duration);
+  }
+
+  function sendResult(duration) {
+    var statusEl = document.getElementById('sendStatus');
+    statusEl.textContent = 'Enviando resultado...';
+
+    fetch('/api/score', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: state.name,
+        turma: state.turma,
+        score: state.score,
+        total: state.questions.length,
+        errors: state.misses,
+        duration: duration
+      })
+    }).then(function (res) {
+      if (res.ok) {
+        statusEl.textContent = 'Resultado enviado para o placar! 📋';
+      } else {
+        statusEl.textContent = 'Não foi possível enviar o resultado.';
+      }
+    }).catch(function () {
+      statusEl.textContent = 'Sem conexão — resultado não enviado.';
+    });
+  }
+
+  document.getElementById('playAgainBtn').addEventListener('click', function () {
+    showScreen('start');
+  });
+
+})();
+</script>
+</body>
+</html>
