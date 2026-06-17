@@ -99,9 +99,24 @@
     background: #fff;
   }
 
-  input[type="text"]:focus {
+  input[type="text"]:focus, select:focus {
     outline: none;
     border-color: var(--green);
+  }
+
+  select {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 1.05rem;
+    font-family: inherit;
+    border: 2px solid #cfe3d6;
+    border-radius: 14px;
+    background: #fff;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%231f9d55' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    cursor: pointer;
   }
 
   .btn {
@@ -441,8 +456,13 @@
     <label for="inputName">Seu nome</label>
     <input type="text" id="inputName" maxlength="60" placeholder="Digite seu nome" autocomplete="off">
 
-    <label for="inputTurma">Turma / série (opcional)</label>
-    <input type="text" id="inputTurma" maxlength="40" placeholder="Ex: 3º ano A" autocomplete="off">
+    <label for="inputTurma">Turma / série</label>
+    <select id="inputTurma">
+      <option value="" disabled selected>Selecione sua turma</option>
+      <option>3A</option><option>3B</option><option>3C</option>
+      <option>4A</option><option>4B</option><option>4C</option><option>4D</option>
+      <option>5A</option><option>5B</option><option>5C</option>
+    </select>
 
     <div class="error-msg" id="startError"></div>
 
@@ -698,7 +718,8 @@
 
   // ---------- Tela inicial ----------
   document.getElementById('inputName').value = localStorage.getItem('cdb_name') || '';
-  document.getElementById('inputTurma').value = localStorage.getItem('cdb_turma') || '';
+  var savedTurma = localStorage.getItem('cdb_turma') || '';
+  if (savedTurma) document.getElementById('inputTurma').value = savedTurma;
 
   document.getElementById('startBtn').addEventListener('click', function () {
     var name = document.getElementById('inputName').value.trim();
@@ -707,6 +728,10 @@
 
     if (!name) {
       errorEl.textContent = 'Digite seu nome para começar!';
+      return;
+    }
+    if (!turma) {
+      errorEl.textContent = 'Selecione sua turma para começar!';
       return;
     }
     errorEl.textContent = '';

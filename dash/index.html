@@ -24,8 +24,7 @@
     min-height: 100vh;
     font-family: 'Fredoka', system-ui, sans-serif;
     color: var(--ink);
-    background:
-      repeating-linear-gradient(90deg, #2bb35e 0px, #2bb35e 60px, #25a653 60px, #25a653 120px);
+    background: repeating-linear-gradient(90deg, #2bb35e 0px, #2bb35e 60px, #25a653 60px, #25a653 120px);
     padding: 20px;
   }
   .wrap { max-width: 900px; margin: 0 auto; }
@@ -44,32 +43,47 @@
     border-radius: 24px;
     pointer-events: none;
   }
-  h1 {
-    text-align: center;
-    color: var(--green-dark);
-    margin: 4px 0 6px;
-    font-size: 1.6rem;
-  }
+  h1 { text-align: center; color: var(--green-dark); margin: 4px 0 6px; font-size: 1.6rem; }
   .subtitle { text-align: center; color: var(--dim); margin: 0 0 18px; font-size: 0.95rem; }
 
+  /* Abas */
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .tab-btn {
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .tab-btn:hover:not(.active) { background: #eef6f0; border-color: var(--green); }
+  .tab-btn.active { background: var(--green-dark); border-color: var(--green-dark); color: #fff; }
+
+  /* Toolbar */
   .toolbar {
-    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+    display: flex; flex-wrap: wrap; gap: 10px;
+    align-items: center; justify-content: flex-end;
     margin-bottom: 14px;
   }
-  .toolbar input[type="text"] {
-    flex: 1; min-width: 160px; padding: 10px 12px; font-family: inherit; font-size: 0.95rem;
-    border: 2px solid var(--border); border-radius: 12px;
-  }
   .toolbar button {
-    padding: 10px 16px; font-family: inherit; font-size: 0.95rem; font-weight: 700;
+    padding: 10px 16px; font-family: inherit; font-size: 0.92rem; font-weight: 700;
     color: #fff; background: var(--green); border: none; border-radius: 12px; cursor: pointer;
     box-shadow: 0 4px 0 var(--green-dark);
   }
   .toolbar button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--green-dark); }
   .toolbar button.danger { background: var(--red); box-shadow: 0 4px 0 #a82a26; }
   .toolbar button.danger:active { box-shadow: 0 1px 0 #a82a26; }
-  .toolbar .meta { font-size: 0.8rem; color: var(--dim); width: 100%; text-align: right; }
+  .toolbar .meta { font-size: 0.8rem; color: var(--dim); flex: 1; }
 
+  /* Tabela */
   table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; overflow: hidden; }
   th, td { padding: 10px 12px; text-align: left; font-size: 0.92rem; border-bottom: 1px solid var(--border); }
   th { background: var(--green-dark); color: #fff; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.04em; }
@@ -79,21 +93,21 @@
   tbody tr:hover { background: #eef6f0; }
   .pos { font-weight: 700; text-align: center; width: 46px; }
   .num { text-align: center; font-weight: 600; }
-  .empty { text-align: center; color: var(--dim); padding: 24px; }
+  .empty { text-align: center; color: var(--dim); padding: 28px; }
 </style>
 </head>
 <body>
-
 <div class="wrap">
-  <div class="card" id="app">
+  <div class="card">
     <h1>🏆 Ranking · Copa das Bandeiras 2026</h1>
-    <p class="subtitle">Acompanhe em tempo real o desempenho da turma no jogo das bandeiras.</p>
+    <p class="subtitle">Acompanhe em tempo real o desempenho de cada turma.</p>
+
+    <div class="tabs" id="tabsRow"></div>
 
     <div class="toolbar">
-      <input type="text" id="filterTurma" placeholder="Filtrar por turma...">
+      <span class="meta" id="metaInfo"></span>
       <button id="refreshBtn">🔄 Atualizar</button>
-      <button id="resetBtn" class="danger">🗑️ Limpar ranking</button>
-      <div class="meta" id="metaInfo"></div>
+      <button id="resetBtn" class="danger">🗑️ Limpar tudo</button>
     </div>
 
     <table>
@@ -110,7 +124,7 @@
       </thead>
       <tbody id="rankingBody"></tbody>
     </table>
-    <div class="empty" id="emptyMsg" style="display:none;">Nenhum participante ainda. Aguarde o jogo começar!</div>
+    <div class="empty" id="emptyMsg" style="display:none;">Nenhum participante ainda.</div>
   </div>
 </div>
 
@@ -118,37 +132,64 @@
 (function () {
   'use strict';
 
-  var qs = function (s) { return document.querySelector(s); };
+  var TURMAS = ['Todas', '3A', '3B', '3C', '4A', '4B', '4C', '4D', '5A', '5B', '5C'];
+  var activeTab = 'Todas';
   var allRows = [];
 
-  function fmtTime(seconds) {
-    seconds = Number(seconds) || 0;
-    var m = Math.floor(seconds / 60);
-    var s = seconds % 60;
-    return m + ':' + (s < 10 ? '0' : '') + s;
+  function qs(s) { return document.querySelector(s); }
+
+  function fmtTime(s) {
+    s = Number(s) || 0;
+    return Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60);
   }
 
   function fmtWhen(ts) {
-    var d = new Date(Number(ts));
-    return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    return new Date(Number(ts)).toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+    });
   }
 
   function medal(i) {
-    if (i === 0) return '🥇';
-    if (i === 1) return '🥈';
-    if (i === 2) return '🥉';
-    return String(i + 1);
+    return i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : String(i + 1);
   }
 
-  function render() {
-    var filter = qs('#filterTurma').value.trim().toLowerCase();
-    var rows = allRows.filter(function (r) {
-      return !filter || (r.turma || '').toLowerCase().indexOf(filter) !== -1;
+  function escapeHtml(str) {
+    var d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // ---------- Abas ----------
+  var tabsRow = qs('#tabsRow');
+  TURMAS.forEach(function (t) {
+    var btn = document.createElement('button');
+    btn.className = 'tab-btn' + (t === activeTab ? ' active' : '');
+    btn.textContent = t;
+    btn.addEventListener('click', function () {
+      activeTab = t;
+      tabsRow.querySelectorAll('.tab-btn').forEach(function (b) {
+        b.classList.toggle('active', b.textContent === activeTab);
+      });
+      updateResetBtn();
+      render();
     });
+    tabsRow.appendChild(btn);
+  });
+
+  function updateResetBtn() {
+    qs('#resetBtn').textContent = activeTab === 'Todas'
+      ? '🗑️ Limpar tudo'
+      : '🗑️ Limpar ' + activeTab;
+  }
+
+  // ---------- Render ----------
+  function render() {
+    var rows = activeTab === 'Todas'
+      ? allRows
+      : allRows.filter(function (r) { return r.turma === activeTab; });
 
     var body = qs('#rankingBody');
     body.innerHTML = '';
-
     qs('#emptyMsg').style.display = rows.length ? 'none' : 'block';
 
     rows.forEach(function (r, i) {
@@ -164,52 +205,56 @@
       body.appendChild(tr);
     });
 
-    qs('#metaInfo').textContent = rows.length + ' participante(s) · atualizado às ' +
+    var label = activeTab === 'Todas' ? 'total' : 'em ' + activeTab;
+    qs('#metaInfo').textContent =
+      rows.length + ' participante(s) ' + label + ' · ' +
       new Date().toLocaleTimeString('pt-BR');
   }
 
-  function escapeHtml(str) {
-    var div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
-
+  // ---------- API ----------
   function loadRanking() {
-    return fetch('/api/ranking').then(function (r) { return r.json(); }).then(function (data) {
-      allRows = data.results || [];
-      render();
-    });
+    return fetch('/api/ranking')
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        allRows = data.results || [];
+        render();
+      });
   }
 
+  // ---------- Atualização automática ----------
   qs('#refreshBtn').addEventListener('click', function () {
     loadRanking().catch(function () {});
   });
-
-  qs('#resetBtn').addEventListener('click', function () {
-    if (!confirm('Apagar TODO o ranking? Essa ação não pode ser desfeita.')) return;
-
-    var key = localStorage.getItem('cdb_reset_key') || '';
-    key = prompt('Chave de limpeza (RESET_KEY):', key) || '';
-    if (!key) return;
-
-    fetch('/api/reset', {
-      method: 'POST',
-      headers: { 'x-reset-key': key }
-    }).then(function (r) {
-      if (!r.ok) throw new Error('unauthorized');
-      localStorage.setItem('cdb_reset_key', key);
-      return loadRanking();
-    }).catch(function () {
-      alert('Chave incorreta ou erro ao limpar o ranking.');
-    });
-  });
-
-  qs('#filterTurma').addEventListener('input', render);
 
   setInterval(function () {
     loadRanking().catch(function () {});
   }, 15000);
 
+  // ---------- Reset ----------
+  qs('#resetBtn').addEventListener('click', function () {
+    var msg = activeTab === 'Todas'
+      ? 'Apagar TODO o ranking? Essa ação não pode ser desfeita.'
+      : 'Apagar o ranking da turma ' + activeTab + '? Essa ação não pode ser desfeita.';
+
+    if (!confirm(msg)) return;
+
+    var key = localStorage.getItem('cdb_reset_key') || '';
+    key = prompt('Chave de limpeza (RESET_KEY):', key) || '';
+    if (!key) return;
+
+    var url = '/api/reset' + (activeTab !== 'Todas' ? '?turma=' + encodeURIComponent(activeTab) : '');
+    fetch(url, { method: 'POST', headers: { 'x-reset-key': key } })
+      .then(function (r) {
+        if (!r.ok) throw new Error('unauthorized');
+        localStorage.setItem('cdb_reset_key', key);
+        return loadRanking();
+      })
+      .catch(function () {
+        alert('Chave incorreta ou erro ao limpar o ranking.');
+      });
+  });
+
+  // ---------- Init ----------
   loadRanking().catch(function () {});
 })();
 </script>

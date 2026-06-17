@@ -18,7 +18,14 @@ export async function onRequestPost(context) {
     });
   }
 
-  await env.DB.prepare("DELETE FROM participants").run();
+  const url = new URL(request.url);
+  const turma = url.searchParams.get("turma") || "";
+
+  if (turma) {
+    await env.DB.prepare("DELETE FROM participants WHERE turma = ?").bind(turma).run();
+  } else {
+    await env.DB.prepare("DELETE FROM participants").run();
+  }
 
   return new Response(JSON.stringify({ ok: true }), {
     headers: { "Content-Type": "application/json" },

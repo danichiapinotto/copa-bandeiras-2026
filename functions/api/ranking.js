@@ -5,7 +5,7 @@ export async function onRequestGet(context) {
     `SELECT name, turma, score, total_questions, errors, duration_seconds, created_at
      FROM participants
      ORDER BY score DESC, duration_seconds ASC, created_at ASC
-     LIMIT 200`
+     LIMIT 500`
   ).all();
 
   return new Response(JSON.stringify({ results }), {
